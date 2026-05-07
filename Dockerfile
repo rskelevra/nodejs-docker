@@ -1,4 +1,4 @@
-FROM registry.buildpiper.in/base/node:18-slim
+FROM registry.buildpiper.in/ot-light:18-slim
 
 WORKDIR /app
 
