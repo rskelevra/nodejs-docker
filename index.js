@@ -1,45 +1,13 @@
-const log = require('./src/log');
-const { setupApp } = require('./src/app');
-const config = require('config');
-const { createLightship } = require('lightship');
-/**
- * Uses node cluster to make sure all CPU cores will be used
- * https://nodejs.org/api/cluster.html
- */
-const cluster = require('cluster');
-//Get the number of CPUs available
-const CPUs = require('os').cpus().length;
+const http = require('http');
 
-/**
- * Lightship adds readiness and liveness prob endpoints
- * for kubernetes healthchecks https://github.com/gajus/lightship
- */
-const ls = createLightship();
+const server = http.createServer((req, res) => {
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.end(`
+    <h1>🚀 Airtel DevOps POC</h1>
+    <p>Application deployed successfully on Kubernetes</p>
+  `);
+});
 
-/**
- * If the cluster module is avaible
- * and the process is the master
- */
-if(config.get('App.cluster.enabled') && cluster.isMaster) {
-  log.info(`Master ${process.pid} is running`);
-
-  // forks a process for each CPU core
-  for(let i = 0; i < CPUs; i++) {
-    cluster.fork();
-  }
-  cluster.on('exit', (worker) => {
-    log.info(`worker ${worker.process.pid} died`);
-  });
-} else {
-  setupApp()
-    .then(app => {
-      app.listen(config.get('App.port'), () => log.info(`app running on port ${config.get('App.port')}`));
-      log.info(`Worker ${process.pid} started`);
-      return app;
-    })
-    .then(() => ls.signalReady())
-    .catch(error => {
-      log.error(error);
-      process.exit(1); // eslint-disable-line
-    });
-}
+server.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
